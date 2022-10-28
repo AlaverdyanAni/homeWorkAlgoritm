@@ -13,7 +13,6 @@ public class StringListImpl implements StringList {
         items = new String[size];
     }
 
-
     // Добавление элемента.
     // Вернуть добавленный элемент
     // в качестве результата выполнения.
