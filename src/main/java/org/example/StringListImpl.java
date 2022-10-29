@@ -1,6 +1,5 @@
 package org.example;
 
-import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -9,8 +8,12 @@ public class StringListImpl implements StringList {
     private int size;
     private String[] items;
 
-    public StringListImpl(int size) {
-        items = new String[size];
+    public StringListImpl() {
+        items = new String[10];
+    }
+
+    public StringListImpl(int initSize) {
+        items = new String[initSize];
     }
 
     // Добавление элемента.
@@ -18,8 +21,10 @@ public class StringListImpl implements StringList {
     // в качестве результата выполнения.
     @Override
     public String add(String item) {
+        validateSize();
         validateItem(item);
-        return add(item);
+        items[size++] = item;
+        return item;
     }
 
     // Добавление элемента
@@ -31,14 +36,17 @@ public class StringListImpl implements StringList {
     // в качестве результата выполнения.
     @Override
     public String add(int index, String item) {
+        validateSize();
         validateItem(item);
         validateIndex(index);
-        if (size == items.length) {
-            items = Arrays.copyOf(items, size + 1);
+        if (index == size) {
+            items[size++] = item;
+            return item;
         }
+        System.arraycopy(items, index, items, index + 1, size - index);
         items[index] = item;
         size++;
-        return items[index];
+        return item;
     }
 
     // Установить элемент
@@ -53,9 +61,8 @@ public class StringListImpl implements StringList {
         validateIndex(index);
         validateItem(item);
         items[index] = item;
-        return items[index];
+        return item;
     }
-
 
     // Удаление элемента.
     // Вернуть удаленный элемент
@@ -64,17 +71,9 @@ public class StringListImpl implements StringList {
     @Override
     public String remove(String item) {
         validateItem(item);
-        String[] copy = new String[items.length - 1];
-        for (int i = 0, j = 0; i < items.length; i++) {
-            if (items[i] != item) {
-                copy[j] = items[i];
-                j--;
-            }
-        }
         int index = indexOf(item);
-        return items[index];
+        return remove(index);
     }
-
 
     // Удаление элемента по индексу.
     // Вернуть удаленный элемент
@@ -83,28 +82,20 @@ public class StringListImpl implements StringList {
     @Override
     public String remove(int index) {
         validateIndex(index);
-        String[] copy = new String[items.length - 1];
-        for (int i = 0, j = 0; i < items.length; i++) {
-            if (i != index) {
-                copy[j] = items[i];
-                j--;
-            }
+        String item = items[index];
+        if (index != size) {
+            System.arraycopy(items, index + 1, items, index, size - index);
         }
-        return items[index];
+        size--;
+        return item;
     }
-
 
     // Проверка на существование элемента.
     // Вернуть true/false;
     @Override
     public boolean contains(String item) {
-        for (String value : items)
-            if (value.equals(item)) {
-                return true;
-            }
-        return false;
+        return indexOf(item) != -1;
     }
-
 
     // Поиск элемента.
     // Вернуть индекс элемента
@@ -131,9 +122,7 @@ public class StringListImpl implements StringList {
             }
         }
         return -1;
-
     }
-
 
     // Получить элемент по индексу.
     // Вернуть элемент или исключение,
@@ -145,18 +134,13 @@ public class StringListImpl implements StringList {
         return items[index];
     }
 
-
     // Сравнить текущий список с другим.
     // Вернуть true/false или исключение,
     // если передан null.
     @Override
     public boolean equals(StringList otherList) {
-        if (items.equals(otherList)) {
-            return true;
-        }
-        return false;
+        return Arrays.equals(this.toArray(), otherList.toArray());
     }
-
 
     // Вернуть фактическое количество элементов.
     @Override
@@ -169,10 +153,7 @@ public class StringListImpl implements StringList {
     // иначе false.
     @Override
     public boolean isEmpty() {
-        if (size == 0) {
-            return true;
-        }
-        return false;
+        return size == 0;
     }
 
     // Удалить все элементы из списка.
@@ -186,23 +167,43 @@ public class StringListImpl implements StringList {
     // и вернуть его.
     @Override
     public String[] toArray() {
-        List<String> itemsList = new ArrayList<>();
-        String[] itemsArray = new String[itemsList.size()];
-        return itemsArray;
+        return Arrays.copyOf(items, size);
+    }
+    private void validateSize() {
+        if (size == items.length) {
+            throw new ItemsIsFullException();
+        }
     }
 
     private void validateIndex(int index) {
         if (index < 0 || index >= size) {
-            throw new MyIndexOfBoundException();
+            throw new NullItemException();
         }
     }
 
     private void validateItem(String item) {
         if (item == null) {
-            throw new MyNullPointerException();
+            throw new NullItemException();
         }
     }
+
+    public String toString() {
+        if (size == 0) {
+            return "[]";
+        }
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append('[');
+        for (int i = 0; i < size; i++) {
+            stringBuilder.append(items[i]);
+            if (i < size - 1) {
+                stringBuilder.append(",");
+            }
+        }
+            return stringBuilder.append(']').toString();
+    }
 }
+
+
 
 
 
