@@ -21,10 +21,7 @@ public class StringListImpl implements StringList {
     // в качестве результата выполнения.
     @Override
     public String add(String item) {
-        validateSize();
-        validateItem(item);
-        items[size++] = item;
-        return item;
+        return add(size, item);
     }
 
     // Добавление элемента
@@ -36,12 +33,12 @@ public class StringListImpl implements StringList {
     // в качестве результата выполнения.
     @Override
     public String add(int index, String item) {
-        validateSize();
+        //validateSize();
         validateItem(item);
         validateIndex(index);
-        if (index == size) {
-            items[size++] = item;
-            return item;
+        if (size==items.length) {
+            items = Arrays.copyOf(items,size+1);
+
         }
         System.arraycopy(items, index, items, index + 1, size - index);
         items[index] = item;
@@ -83,10 +80,11 @@ public class StringListImpl implements StringList {
     public String remove(int index) {
         validateIndex(index);
         String item = items[index];
-        if (index != size) {
+        size--;
+        if (!(index == size)) {
             System.arraycopy(items, index + 1, items, index, size - index);
         }
-        size--;
+
         return item;
     }
 
@@ -94,7 +92,7 @@ public class StringListImpl implements StringList {
     // Вернуть true/false;
     @Override
     public boolean contains(String item) {
-        return indexOf(item) != -1;
+        return indexOf(item) > -1;
     }
 
     // Поиск элемента.
@@ -116,7 +114,7 @@ public class StringListImpl implements StringList {
     // или -1 в случае отсутствия.
     @Override
     public int lastIndexOf(String item) {
-        for (int i = items.length; i > -1; i--) {
+        for (int i = size; i > -1; i--) {
             if (items[i].equals(item)) {
                 return i;
             }
@@ -176,8 +174,8 @@ public class StringListImpl implements StringList {
     }
 
     private void validateIndex(int index) {
-        if (index < 0 || index >= size) {
-            throw new NullItemException();
+        if (index < 0 || index > size) {
+            throw new InvalidIndexException();
         }
     }
 
@@ -185,6 +183,9 @@ public class StringListImpl implements StringList {
         if (item == null) {
             throw new NullItemException();
         }
+    }
+    private String[] grow(int newSize){
+        return items=Arrays.copyOf(items, newSize);
     }
 
     public String toString() {
