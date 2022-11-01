@@ -191,9 +191,6 @@ public class IntegerListImpl implements IntegerList {
         }
     }
 
-    private Integer[] grow(int newSize){
-        return items=Arrays.copyOf(items,newSize);
-    }
     private void swapElements(Integer[]arr,int indexA, int indexB){
         int tmp=arr[indexA];
         arr[indexA]=arr[indexB];
