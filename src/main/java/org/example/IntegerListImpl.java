@@ -1,16 +1,21 @@
 package org.example;
 
-import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
+import java.util.stream.IntStream;
 
-public class StringListImpl implements StringList {
+public class IntegerListImpl implements IntegerList {
     private int size;
-    private String[] items;
+    private Integer[] items;
 
-    public StringListImpl(int size) {
-        items = new String[size];
+    public IntegerListImpl(){
+        items=new Integer[10];
+    }
+
+    public IntegerListImpl(int initsize) {
+        items = new Integer[initsize];
     }
 
 
@@ -18,9 +23,9 @@ public class StringListImpl implements StringList {
     // Вернуть добавленный элемент
     // в качестве результата выполнения.
     @Override
-    public String add(String item) {
+    public Integer add(Integer item) {
         validateItem(item);
-        return add(item);
+        return add(size,item);
     }
 
     // Добавление элемента
@@ -31,15 +36,16 @@ public class StringListImpl implements StringList {
     // Вернуть добавленный элемент
     // в качестве результата выполнения.
     @Override
-    public String add(int index, String item) {
+    public Integer add(int index, Integer item) {
         validateItem(item);
         validateIndex(index);
         if (size == items.length) {
-            items = Arrays.copyOf(items, size + 1);
+           items = Arrays.copyOf(items, size + 1);
         }
+        System.arraycopy(items,index,items,index+1,size-index);
         items[index] = item;
         size++;
-        return items[index];
+        return item;
     }
 
     // Установить элемент
@@ -50,11 +56,11 @@ public class StringListImpl implements StringList {
     // фактического количества элементов
     // или выходит за пределы массива.
     @Override
-    public String set(int index, String item) {
+    public Integer set(int index, Integer item) {
         validateIndex(index);
         validateItem(item);
         items[index] = item;
-        return items[index];
+        return item;
     }
 
 
@@ -63,17 +69,10 @@ public class StringListImpl implements StringList {
     // или исключение, если подобный
     // элемент отсутствует в списке.
     @Override
-    public String remove(String item) {
+    public Integer remove(Integer item) {
         validateItem(item);
-        String[] copy = new String[items.length - 1];
-        for (int i = 0, j = 0; i < items.length; i++) {
-            if (items[i] != item) {
-                copy[j] = items[i];
-                j--;
-            }
-        }
         int index = indexOf(item);
-        return items[index];
+        return remove(index);
     }
 
 
@@ -82,14 +81,12 @@ public class StringListImpl implements StringList {
     // или исключение, если подобный
     // элемент отсутствует в списке.
     @Override
-    public String remove(int index) {
+    public Integer remove(int index) {
         validateIndex(index);
-        String[] copy = new String[items.length - 1];
-        for (int i = 0, j = 0; i < items.length; i++) {
-            if (i != index) {
-                copy[j] = items[i];
-                j--;
-            }
+        Integer item=items[index];
+        size--;
+        if(!(index==size)){
+            System.arraycopy(items,index+1,items,index,size-index);
         }
         return items[index];
     }
@@ -98,12 +95,10 @@ public class StringListImpl implements StringList {
     // Проверка на существование элемента.
     // Вернуть true/false;
     @Override
-    public boolean contains(String item) {
-        for (String value : items)
-            if (value.equals(item)) {
-                return true;
-            }
-        return false;
+    public boolean contains(Integer item) {
+       Integer[]itemsCopy=toArray();
+       sortInsertion(itemsCopy);
+        return binarySearch(itemsCopy,item);
     }
 
 
@@ -111,7 +106,7 @@ public class StringListImpl implements StringList {
     // Вернуть индекс элемента
     // или -1 в случае отсутствия.
     @Override
-    public int indexOf(String item) {
+    public int indexOf(Integer item) {
         for (int i = 0; i < items.length; i++) {
             if (items[i].equals(item)) {
                 return i;
@@ -125,8 +120,8 @@ public class StringListImpl implements StringList {
     // Вернуть индекс элемента
     // или -1 в случае отсутствия.
     @Override
-    public int lastIndexOf(String item) {
-        for (int i = items.length; i > -1; i--) {
+    public int lastIndexOf(Integer item) {
+        for (int i = size; i > -1; i--) {
             if (items[i].equals(item)) {
                 return i;
             }
@@ -141,7 +136,7 @@ public class StringListImpl implements StringList {
     // если выходит за рамки фактического
     // количества элементов.
     @Override
-    public String get(int index) {
+    public Integer get(int index) {
         validateIndex(index);
         return items[index];
     }
@@ -151,11 +146,8 @@ public class StringListImpl implements StringList {
     // Вернуть true/false или исключение,
     // если передан null.
     @Override
-    public boolean equals(StringList otherList) {
-        if (items.equals(otherList)) {
-            return true;
-        }
-        return false;
+    public boolean equals(IntegerList otherList) {
+        return Arrays.equals(this.toArray(),otherList.toArray());
     }
 
 
@@ -170,10 +162,7 @@ public class StringListImpl implements StringList {
     // иначе false.
     @Override
     public boolean isEmpty() {
-        if (size == 0) {
-            return true;
-        }
-        return false;
+        return size==0;
     }
 
     // Удалить все элементы из списка.
@@ -186,24 +175,99 @@ public class StringListImpl implements StringList {
     // из строк в списке
     // и вернуть его.
     @Override
-    public String[] toArray() {
-        List<String> itemsList = new ArrayList<>();
-        String[] itemsArray = new String[itemsList.size()];
-        return itemsArray;
+    public Integer[] toArray() {
+        return Arrays.copyOf(items,size);
     }
 
     private void validateIndex(int index) {
-        if (index < 0 || index >= size) {
-            throw new MyIndexOfBoundException();
+        if (index < 0 || index > size) {
+            throw new InvalidIndexException();
         }
     }
 
-    private void validateItem(String item) {
+    private void validateItem(Integer item) {
         if (item == null) {
-            throw new MyNullPointerException();
+            throw new NullItemException();
         }
     }
+
+    private Integer[] grow(int newSize){
+        return items=Arrays.copyOf(items,newSize);
+    }
+    private void swapElements(Integer[]arr,int indexA, int indexB){
+        int tmp=arr[indexA];
+        arr[indexA]=arr[indexB];
+        arr[indexB]=tmp;
+    }
+
+    public void sortBubble(Integer arr[]){
+        for (int i = 0; i < arr.length-1; i++) {
+            for (int j = 0; j < arr.length-1-i; j++) {
+                if (arr[j]>arr[j+1]){
+                    swapElements(arr,j,j+1);
+                }
+            }
+        }
+    }
+
+    public void sortSelection(Integer[]arr){
+        for (int i = 0; i < arr.length-1; i++) {
+            int minElementIndex=i;
+            for (int j = i+1; j < arr.length; j++) {
+                if(arr[j]<arr[minElementIndex]){
+                    minElementIndex=j;
+                }
+            }
+            swapElements(arr,i,minElementIndex);
+
+        }
+    }
+
+    public void sortInsertion(Integer[]arr){
+        for (int i = 0; i < arr.length; i++) {
+            int temp=arr[i];
+            int j=i;
+            while (j>0 && arr[j-1]>=temp){
+                arr[j]=arr[j-1];
+                j--;
+            }
+            arr[j]=temp;
+
+        }
+    }
+
+
+
+    private boolean binarySearch(Integer[] arr, Integer item) {
+        int min = 0;
+        int max = arr.length - 1;
+        while (min <= max) {
+            int mid = (min + max) / 2;
+            if (item == arr[mid]) {
+                return true;
+            }
+            if (item < arr[mid]) {
+                max = mid - 1;
+            } else {
+                min = mid + 1;
+            }
+        }
+        return false;
+    }
+
+    public  Integer[] createRandomArray(int size){
+        Random random = new Random();
+        Integer[]arr = new Integer[size];
+        for (int i = 0; i < arr.length ; i++) {
+            arr[i]=random.nextInt(size);
+        }
+        return arr;
+    }
+
 }
+
+
+
 
 
 
